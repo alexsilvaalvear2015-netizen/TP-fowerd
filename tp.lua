@@ -1,6 +1,8 @@
--- COLINIA HUB | ALL IN ONE
+-- COLINIA HUB | ALL IN ONE (CON FLY)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
@@ -37,7 +39,7 @@ Toggle.Draggable = true
 
 -- FRAME
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0,230,0,320)
+Frame.Size = UDim2.new(0,230,0,360)
 Frame.Position = UDim2.new(0,20,0.5,30)
 Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 Frame.Visible = false
@@ -66,7 +68,14 @@ local T2 = boton("TP 2",130)
 local G3 = boton("Guardar TP 3",170)
 local T3 = boton("TP 3",210)
 
-local Skip = boton("Skip Base",260)
+local Skip = boton("Skip Base",250)
+local Up = boton("Elevar arriba", 290)
+local FlyBtn = boton("Fly (F)", 330)
+
+-- VARIABLES
+local elevando = false
+local flying = false
+local flySpeed = 80
 
 -- FUNCIONES
 G1.MouseButton1Click:Connect(function() TP1 = hrp.CFrame end)
@@ -84,6 +93,72 @@ Skip.MouseButton1Click:Connect(function()
 	hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 40)
 	task.wait(0.3)
 	noclip = false
+end)
+
+-- ELEVAR ARRIBA (CONTINUO)
+Up.MouseButton1Down:Connect(function()
+	elevando = true
+end)
+
+Up.MouseButton1Up:Connect(function()
+	elevando = false
+end)
+
+-- FLY + NOCLIP
+FlyBtn.MouseButton1Click:Connect(function()
+	flying = not flying
+	noclip = flying
+end)
+
+local moveVector = Vector3.new(0,0,0)
+
+UserInputService.InputBegan:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.W then
+		moveVector = moveVector + Vector3.new(0,0,-1)
+	elseif input.KeyCode == Enum.KeyCode.S then
+		moveVector = moveVector + Vector3.new(0,0,1)
+	elseif input.KeyCode == Enum.KeyCode.A then
+		moveVector = moveVector + Vector3.new(-1,0,0)
+	elseif input.KeyCode == Enum.KeyCode.D then
+		moveVector = moveVector + Vector3.new(1,0,0)
+	elseif input.KeyCode == Enum.KeyCode.Space then
+		moveVector = moveVector + Vector3.new(0,1,0)
+	elseif input.KeyCode == Enum.KeyCode.LeftShift then
+		moveVector = moveVector + Vector3.new(0,-1,0)
+	elseif input.KeyCode == Enum.KeyCode.F then
+		flying = not flying
+		noclip = flying
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.W then
+		moveVector = moveVector - Vector3.new(0,0,-1)
+	elseif input.KeyCode == Enum.KeyCode.S then
+		moveVector = moveVector - Vector3.new(0,0,1)
+	elseif input.KeyCode == Enum.KeyCode.A then
+		moveVector = moveVector - Vector3.new(-1,0,0)
+	elseif input.KeyCode == Enum.KeyCode.D then
+		moveVector = moveVector - Vector3.new(1,0,0)
+	elseif input.KeyCode == Enum.KeyCode.Space then
+		moveVector = moveVector - Vector3.new(0,1,0)
+	elseif input.KeyCode == Enum.KeyCode.LeftShift then
+		moveVector = moveVector - Vector3.new(0,-1,0)
+	end
+end)
+
+RunService.Heartbeat:Connect(function(delta)
+	-- ELEVACIÓN
+	if elevando then
+		hrp.CFrame = hrp.CFrame + Vector3.new(0, 30 * delta, 0)
+	end
+
+	-- FLY
+	if flying then
+		local cam = workspace.CurrentCamera
+		local dir = (cam.CFrame.LookVector * moveVector.Z) + (cam.CFrame.RightVector * moveVector.X) + Vector3.new(0, moveVector.Y, 0)
+		hrp.CFrame = hrp.CFrame + dir.Unit * flySpeed * delta
+	end
 end)
 
 -- TOGGLE
